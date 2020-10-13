@@ -92,7 +92,6 @@ subprojects.filter { listOf("flink-core-kotlin", "flink-streaming-kotlin").conta
             publications {
                 register<MavenPublication>("bintray") {
                     from(components["java"])
-                    artifact(tasks["sourcesJar"])
                     artifact(tasks["docJar"])
                 }
             }
