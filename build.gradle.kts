@@ -103,6 +103,7 @@ subprojects.filter { listOf("flink-core-kotlin", "flink-streaming-kotlin").conta
             setPublications("bintray")
 
             with(pkg) {
+                userOrg = "classpass-oss"
                 repo = "maven"
                 setLicenses("Apache-2.0")
                 vcsUrl = "https://github.com/classpass/flink-kotlin"
