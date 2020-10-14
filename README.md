@@ -1,3 +1,5 @@
+[ ![Download](https://api.bintray.com/packages/classpass-oss/maven/flink-kotlin/images/download.svg) ](https://bintray.com/classpass-oss/maven/flink-kotlin/_latestVersion)
+
 # Overview
 
 [Apache Flink](https://flink.apache.org/) is a platform for stateful stream computation for the JVM,
@@ -84,7 +86,7 @@ work around this on 1.3.
 Artifacts are hosted in jcenter, available as the `jcenter()` repository in Gradle.
 
 In your `build.gradle.kts`, add whichever of the core or streaming libraries are useful to you (`flink-core-kotlin`
-depends on `flink-core`, while `flink-streaming-kotlin` depends on `flink-streaming`:
+depends on `flink-core`, while `flink-streaming-kotlin` depends on `flink-streaming`):
 
 ```
 implementation("com.classpass.oss.flink.kotlin", "flink-core-kotlin", "LATEST-VERSION-HERE")
