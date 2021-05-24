@@ -1,13 +1,13 @@
-import com.jfrog.bintray.gradle.BintrayExtension
-import java.time.Instant
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.net.URI
 
 plugins {
     java
-    kotlin("jvm") version "1.4.10" apply false
-    id("com.jfrog.bintray") version "1.8.5" apply false
-    id("org.jetbrains.dokka") version "1.4.0" apply false
+    kotlin("jvm") version "1.4.32" apply false
+    id("org.jetbrains.dokka") version "1.4.32" apply false
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("net.researchgate.release") version "2.8.1"
     id("com.github.ben-manes.versions") version "0.33.0"
     id("org.jmailen.kotlinter") version "3.2.0"
@@ -76,7 +76,7 @@ subprojects {
 subprojects.filter { listOf("flink-core-kotlin", "flink-streaming-kotlin").contains(it.name) }.forEach { project ->
     project.run {
         apply(plugin = "maven-publish")
-        apply(plugin = "com.jfrog.bintray")
+        apply(plugin = "signing")
         apply(plugin = "org.jetbrains.dokka")
 
         group = "com.classpass.oss.flink.kotlin"
@@ -90,38 +90,71 @@ subprojects.filter { listOf("flink-core-kotlin", "flink-streaming-kotlin").conta
 
         configure<PublishingExtension> {
             publications {
-                register<MavenPublication>("bintray") {
+                register<MavenPublication>("sonatype") {
                     from(components["java"])
                     artifact(tasks["docJar"])
+                    // sonatype required pom elements
+                    pom {
+                        name.set("${project.group}:${project.name}")
+                        description.set(name)
+                        url.set("https://github.com/classpass/flink-kotlin")
+                        licenses {
+                            license {
+                                name.set("Apache 2.0")
+                                url.set("https://www.apache.org/licenses/LICENSE-2.0.html")
+                            }
+                        }
+                        developers {
+                            developer {
+                                id.set("marshallpierce")
+                                name.set("Marshall Pierce")
+                                email.set("575695+marshallpierce@users.noreply.github.com")
+                            }
+                        }
+                        scm {
+                            connection.set("scm:git:https://github.com/classpass/flink-kotlin")
+                            developerConnection.set("scm:git:https://github.com/classpass/flink-kotlin.git")
+                            url.set("https://github.com/classpass/flink-kotlin")
+                        }
+                    }
+                }
+            }
+
+            // A safe throw-away place to publish to:
+            // ./gradlew publishSonatypePublicationToLocalDebugRepository -Pversion=foo
+            repositories {
+                maven {
+                    name = "localDebug"
+                    url = URI.create("file:///${project.buildDir}/repos/localDebug")
                 }
             }
         }
 
-        configure<BintrayExtension> {
-            user = rootProject.findProperty("bintrayUser")?.toString()
-            key = rootProject.findProperty("bintrayApiKey")?.toString()
-            setPublications("bintray")
-
-            with(pkg) {
-                userOrg = "classpass-oss"
-                repo = "maven"
-                setLicenses("Apache-2.0")
-                vcsUrl = "https://github.com/classpass/flink-kotlin"
-                // can use one Bintray package because these all have the same group id
-                name = "flink-kotlin"
-
-                with(version) {
-                    name = project.version.toString()
-                    released = Instant.now().toString()
-                    vcsTag = project.version.toString()
-                }
+        // don't barf for devs without signing set up
+        if (project.hasProperty("signing.keyId")) {
+            configure<SigningExtension> {
+                sign(project.extensions.getByType<PublishingExtension>().publications["sonatype"])
             }
+        }
+
+        // releasing should publish
+        rootProject.tasks.afterReleaseBuild {
+            dependsOn(provider { project.tasks.named("publishToSonatype") })
         }
     }
 }
 
-tasks {
-    afterReleaseBuild {
-        dependsOn(named("bintrayUpload"))
+nexusPublishing {
+    repositories {
+        sonatype {
+            // sonatypeUsername and sonatypePassword properties are used automatically
+            stagingProfileId.set("1f02cf06b7d4cd") // com.classpass.oss
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        }
     }
+    // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
+    // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
+    connectTimeout.set(Duration.ofMinutes(3))
+    clientTimeout.set(Duration.ofMinutes(3))
 }
