@@ -11,7 +11,7 @@ plugins {
     id("net.researchgate.release") version "2.8.1"
     id("com.github.ben-manes.versions") version "0.33.0"
     id("org.jmailen.kotlinter") version "3.2.0"
-    id("com.github.hierynomus.license") version "0.15.0" apply false
+    id("com.github.hierynomus.license") version "0.16.1" apply false
 }
 
 subprojects {
@@ -21,7 +21,7 @@ subprojects {
     apply(plugin = "com.github.hierynomus.license")
 
     repositories {
-        jcenter()
+        mavenCentral()
     }
 
     val deps by extra {
