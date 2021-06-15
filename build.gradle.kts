@@ -158,3 +158,10 @@ nexusPublishing {
     connectTimeout.set(Duration.ofMinutes(3))
     clientTimeout.set(Duration.ofMinutes(3))
 }
+
+release {
+    // work around lack of proper kotlin DSL support
+    (getProperty("git") as net.researchgate.release.GitAdapter.GitConfig).apply {
+        requireBranch = "main"
+    }
+}
