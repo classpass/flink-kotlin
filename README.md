@@ -107,6 +107,47 @@ The `check` task will check formatting (in addition to the other normal checks),
 
 The `check` task will ensure that license headers are properly applied, and `licenseFormat` will apply headers for you.
 
+## Releasing a version
+
+### Checking artifacts locally
+
+To see the artifacts that would be released, build the relevant artifacts locally using a fake version `foo`:
+
+```
+./gradlew publishSonatypePublicationToLocalDebugRepository -Pversion=foo
+tree */build/repos/localDebug
+```
+
+### Maven Central requirements
+
+To publish to Maven Central, you'll need the `sonatypeUsername` and `sonatypePassword` Gradle properties set (`~/.gradle/gradle.properties` is typically where people put these). You'll also need GPG set up for the [signing plugin](https://docs.gradle.org/current/userguide/signing_plugin.html), as per Sonatype's [requirements](https://central.sonatype.org/publish/requirements/gpg/). All told, your properties should have:
+
+
+```
+sonatypeUsername = ...
+sonatypePassword = ...
+
+signing.keyId = ...
+signing.password = ...
+signing.secretKeyRingFile = ...
+```
+
+### Uploading a test version to Sonatype
+
+Once you have that set up, you can try publishing with a test version:
+
+```
+./gradlew -Pversion=0.0 publishToSonatype
+```
+
+This will create and populate a staging repo in [Sonatype's s01 nexus instance](https://s01.oss.sonatype.org/#stagingRepositories). You can inspect the contents, and "Close" it, which runs validation for GPG signatures, etc. If closing reports validation errors, those must be addressed before releasing can work. Either way, "Drop" the staging repo once you're done playing with it.
+
+### Releasing a real version
+
+The [release plugin](https://github.com/researchgate/gradle-release) automates making appropriate commits, tags, etc. Run `./gradlew release` and follow the prompts to pick the released version and the next snapshot version.
+
+Once that's done, go to [nexus](https://s01.oss.sonatype.org/#stagingRepositories) and "Close", then "Release" the staging repo you just uploaded. After 15-20 mins, the artifacts should be available in Maven Central.
+
 # License
 
 See [LICENSE](LICENSE) for the project license.
