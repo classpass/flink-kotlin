@@ -24,19 +24,12 @@ subprojects {
         mavenCentral()
     }
 
-    val deps by extra {
-        mapOf(
-            "flink" to "1.11.2",
-            "junit" to "5.7.0",
-            "slf4j" to "1.7.30"
-        )
-    }
 
     dependencies {
         testImplementation(kotlin("test-junit5"))
 
-        testImplementation("org.junit.jupiter:junit-jupiter:${deps["junit"]}")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${deps["junit"]}")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
     }
 
     java {
